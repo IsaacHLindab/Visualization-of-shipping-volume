@@ -1,4 +1,10 @@
 # Visualization-of-shipping-volume
+Install requirements with:
+    pip install -r requirements.txt
+
+Run dash local host with:
+(make sure you are in the root folder, /VISUALIZATION-OF-SHIPPING-VOLUME)
+    python app.py
 
 ## One pager:
 
