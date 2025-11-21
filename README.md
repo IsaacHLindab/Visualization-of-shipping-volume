@@ -50,14 +50,14 @@ This will be developed as an agile project with sprints using the Microsoft Plan
 8. Prep for AI/ML assistant
 
 **Overview of sprints:**
-Sprint 1 - Research and POC 
-Sprint 2 - Steering group meeting 
-Sprint 3 - Basic visualization tool 
-Sprint 4 - Connect to real time data 
-Sprint 5 - Implement loading suggestions 
-Sprint 6 - Go live in Control Tower 
-Sprint 7 - Go live in Transport Office (Sweden) 
-Sprint 8 - Prep for AI/ML assistant 
+1. Research and POC 
+2. Steering group meeting 
+3. Basic visualization tool 
+4. Connect to real time data 
+5. Implement loading suggestions 
+6. Go live in Control Tower 
+7. Go live in Transport Office (Sweden) 
+8. Prep for AI/ML assistant 
 
 More detailed overview of sprints can be found in teams "original overview of agile planning.png"
 
