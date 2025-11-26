@@ -28,10 +28,67 @@ def create_layout():
 
 
 def create_control_panel():
-    """Create the left control panel"""
+    # Read the id of each element for a description of what it is used for
+
     return html.Div([
         html.H2('🚛 Truck Loading Control', style={'marginBottom': '20px'}),
         
+        html.Div([
+            html.Label('Order Number:', style={
+                'fontSize': '14px', 
+                'marginBottom': '5px',
+                'display': 'block',
+                'fontWeight': 'bold'
+            }),
+            html.Div([
+                dcc.Input(
+                    id='order-input',
+                    type='text',
+                    placeholder='Enter order number...',
+                    style={
+                        'width': '70%',
+                        'padding': '8px',
+                        'borderRadius': '5px',
+                        'border': '1px solid #475569',
+                        'backgroundColor': '#334155',
+                        'color': 'white',
+                        'marginRight': '5px'
+                    }
+                ),
+                html.Button(
+                    '🔍 Load',
+                    id='load-order-btn',
+                    n_clicks=0,
+                    style={
+                        'padding': '8px 15px',
+                        'backgroundColor': '#10b981',
+                        'color': 'white',
+                        'border': 'none',
+                        'borderRadius': '5px',
+                        'cursor': 'pointer',
+                        'fontSize': '14px'
+                    }
+                )
+            ], style={'display': 'flex', 'alignItems': 'center'})
+        ], style={
+            'padding': '15px',
+            'backgroundColor': '#334155',
+            'borderRadius': '5px',
+            'marginBottom': '20px'
+        }),
+
+        html.Div(
+            id='url-order-info',
+            style={
+                'padding': '10px',
+                'backgroundColor': '#334155',
+                'borderRadius': '5px',
+                'marginBottom': '20px',
+                'fontSize': '14px',
+                'fontWeight': 'bold'
+            }
+        ),
+
         html.Button(
             '➕ Add Package',
             id='add-package-btn',
@@ -100,11 +157,16 @@ def create_visualization_panel():
 
 
 def create_data_stores():
-    """Create data storage components"""
+    """ 
+    Create data storage components 
+    Per session (dissapears if refresh)
+    todo: cache data
+    """
     return [
         dcc.Store(id='packages-store', data=INITIAL_PACKAGES),
         dcc.Store(id='selected-package-id', data=None),
         dcc.Store(id='package-counter', data=len(INITIAL_PACKAGES)),  
-        dcc.Store(id='keyboard-event-store', data=None),
-        dcc.Store(id='camera-store', data=None)
+        dcc.Store(id='keyboard-event-store', data=None), # register keyboard events
+        dcc.Store(id='camera-store', data=None), # store camera position inbetween renders
+        dcc.Location(id='url', refresh=False) # used to fetch transport order in url parameter
     ]
