@@ -1,9 +1,62 @@
 """Callbacks for handling URL parameters and loading order data"""
 
 from dash import Input, Output, State, html, callback_context
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 import numpy as np
 
+def parse_powerbi_packages(package_string):
+    """
+    Parse package data from Power BI URL parameter
+    Format: Name~X~Y~Z~Weight~Stackable|Name~X~Y~Z~Weight~Stackable|...
+    """
+    if not package_string:
+        return []
+    
+    packages = []
+    colors = [
+        'rgb(59, 130, 246)',   # Blue
+        'rgb(234, 88, 12)',    # Orange
+        'rgb(34, 197, 94)',    # Green
+        'rgb(168, 85, 247)',   # Purple
+        'rgb(236, 72, 153)'    # Pink
+    ]
+    
+    # Split by pipe to get individual packages
+    package_parts = package_string.split('|')
+    
+    for i, pkg_str in enumerate(package_parts):
+        try:
+            # Split by tilde to get package attributes
+            parts = pkg_str.split('~')
+            
+            if len(parts) != 6:
+                print(f"⚠️ Invalid package format: {pkg_str}")
+                continue
+            
+            name, x, y, z, weight, stackable = parts
+            
+            package = {
+                'id': i + 1,
+                'name': name,
+                'x': 0.0,  # Start at origin, user can move
+                'y': 0.0,
+                'z': 0.0,
+                'width': float(x),
+                'height': float(z),
+                'depth': float(y),
+                'weight': float(weight),
+                'rotation': 0,
+                'color': colors[i % len(colors)],
+                'stackable': stackable == '1' or stackable.lower() == 'true'
+            }
+            
+            packages.append(package)
+            
+        except ValueError as e:
+            print(f"❌ Error parsing package: {pkg_str} - {e}")
+            continue
+    
+    return packages
 
 def register_callbacks(app):
     """Register URL parameter handling callbacks"""
@@ -41,11 +94,15 @@ def register_callbacks(app):
         [State('order-input', 'value')],
         prevent_initial_call=True
     )
+    
     def load_packages_from_order_data(href, load_clicks, manual_order):
-        """Loads oackages from order data based on URL parameter or manual input"""
+        """Loads packages from order data based on URL parameter or manual input"""
+        from urllib.parse import unquote
+        
         ctx = callback_context
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
         order_number = None
+        package_data = None
         
         # Check which input triggered the load
         if trigger_id == 'load-order-btn' and manual_order:
@@ -55,9 +112,30 @@ def register_callbacks(app):
             parsed = urlparse(href)
             params = parse_qs(parsed.query)
             order_number = params.get('order', [None])[0]
-            print(f"Loading order from URL: {order_number}")
+            package_data = params.get('packages', [None])[0]
+            
+            # Console debug for packages
+            print(f"🔍 POWER BI DATA RECEIVED")
+            print(f"Order ID: {order_number}")
+            print(f"Package Data Length: {len(package_data) if package_data else 0} chars")
+            if package_data:
+                print(f"Package Data Preview: {package_data[:100]}...")
+            print(f"{'='*60}\n")
         
+        # Try to parse Power BI package data first
+        if package_data:
+            packages = parse_powerbi_packages(unquote(package_data))
+            
+            if packages:
+                print(f"✅ Parsed {len(packages)} packages from Power BI:")
+                for pkg in packages:
+                    print(f"   📦 {pkg['name']}: {pkg['width']}x{pkg['depth']}x{pkg['height']}m, {pkg['weight']}kg")
+                print()
+                return packages, len(packages)
+        
+        # Fallback to demo packages
         if order_number:
+            print(f"⚠️ No package data in URL, using demo packages for order {order_number}")
             packages = create_demo_packages_for_order(order_number)
             return packages, len(packages)
         
