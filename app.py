@@ -15,22 +15,6 @@ def add_iframe_headers(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
-# Disable arrow key scrolling
-app.clientside_callback(
-    """
-    function() {
-        document.addEventListener('keydown', function(e) {
-            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(e.key)) {
-                e.preventDefault();
-            }
-        });
-        return null;
-    }
-    """,
-    Output('keyboard-event-store', 'data'),
-    Input('keyboard-event-store', 'data')
-)
-
 # Set the layout
 app.layout = create_layout()
 

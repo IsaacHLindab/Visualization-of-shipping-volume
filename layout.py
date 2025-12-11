@@ -106,8 +106,6 @@ def create_control_panel():
             }
         ),
 
-        create_keyboard_shortcuts_info(),
-
         html.Div([
             html.H3('Summary', style={'marginBottom': '10px'}),
             html.Div(id='summary-stats')
@@ -117,6 +115,8 @@ def create_control_panel():
             html.H3('Packages', style={'marginBottom': '10px'}),
             html.Div(id='package-list', style={'maxHeight': '250px', 'overflowY': 'auto'})
         ], style={'marginBottom': '20px'}),
+
+        create_floor_grid(),
         
         html.Div([
             html.H3('Edit Selected Package', style={'marginBottom': '10px'}),
@@ -131,18 +131,6 @@ def create_control_panel():
         'height': '100vh',
         'overflowY': 'auto'
     })
-
-
-def create_keyboard_shortcuts_info():
-    """Create keyboard shortcuts information panel"""
-    return html.Div([
-        html.H3('⌨️ Keyboard Shortcuts', style={'marginBottom': '10px', 'fontSize': '16px'}),
-        html.Div([
-            html.Div('Arrow Keys: Move X/Y', style={'fontSize': '12px', 'color': '#cbd5e1', 'marginBottom': '3px'}),
-            html.Div('PgUp/PgDn: Move Z', style={'fontSize': '12px', 'color': '#cbd5e1', 'marginBottom': '3px'}),
-            html.Div('R: Rotate 90°', style={'fontSize': '12px', 'color': '#cbd5e1', 'marginBottom': '3px'}),
-        ], style={'padding': '10px', 'backgroundColor': '#334155', 'borderRadius': '5px'})
-    ], style={'marginBottom': '20px'})
 
 
 def create_visualization_panel():
@@ -170,3 +158,51 @@ def create_data_stores():
         dcc.Store(id='camera-store', data=None), # store camera position inbetween renders
         dcc.Location(id='url', refresh=False) # used to fetch transport order in url parameter
     ]
+
+def create_floor_grid():
+    """Create clickable grid for quick positioning"""
+    from config import TRUCK_LENGTH, TRUCK_WIDTH
+    
+    # Grid configuration
+    cell_width = 1.0
+    cols = int(TRUCK_LENGTH / cell_width)
+    rows = int(TRUCK_WIDTH / cell_width)
+    
+    grid_cells = []
+    for row in range(rows):
+        row_cells = []
+        for col in range(cols):
+            cell_x = col * cell_width
+            cell_y = row * cell_width
+            
+            row_cells.append(
+                html.Div(
+                    id={'type': 'grid-cell', 'x': cell_x, 'y': cell_y},
+                    style={
+                        'width': '30px',
+                        'height': '50px',
+                        'border': '1px solid #475569',
+                        'backgroundColor': '#1e293b',
+                        'cursor': 'pointer',
+                        'transition': 'background-color 0.2s'
+                    },
+                    n_clicks=0
+                )
+            )
+        
+        grid_cells.append(
+            html.Div(row_cells, style={'display': 'flex'})
+        )
+    
+    return html.Div([
+        html.Label('Quick Position (Click Grid):', 
+                  style={'fontWeight': 'bold', 'marginBottom': '5px'}),
+        html.Div(grid_cells, style={
+            'border': '2px solid #475569',
+            'padding': '5px',
+            'borderRadius': '5px',
+            'marginBottom': '15px'
+        }),
+        html.Div('Click a cell to position package', 
+                style={'fontSize': '11px', 'color': '#94a3b8', 'textAlign': 'center'})
+    ])

@@ -1,8 +1,9 @@
 """Callbacks for package manipulation (add, delete, rotate, move)"""
 
-from dash import Input, Output, State, callback_context
+from dash import Input, Output, State, callback_context, ALL
 import dash
-import numpy as np
+from dash.exceptions import PreventUpdate
+import numpy as PreventUpdate
 import json
 from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, MOVE_STEP
 from utils.geometry import rotate_dimensions
@@ -152,47 +153,42 @@ def register_callbacks(app):
 
     @app.callback(
         Output('packages-store', 'data', allow_duplicate=True),
-        [Input('x-minus-btn', 'n_clicks'),
-         Input('x-plus-btn', 'n_clicks'),
-         Input('y-minus-btn', 'n_clicks'),
-         Input('y-plus-btn', 'n_clicks'),
-         Input('z-minus-btn', 'n_clicks'),
-         Input('z-plus-btn', 'n_clicks')],
-        [State('selected-package-id', 'data'),
-         State('packages-store', 'data')],
+        [Input({'type': 'grid-cell', 'x': ALL, 'y': ALL}, 'n_clicks')],
+        [State('packages-store', 'data'),
+        State('selected-package-id', 'data')],
         prevent_initial_call=True
     )
-    def move_package_buttons(x_minus, x_plus, y_minus, y_plus, z_minus, z_plus, 
-                            selected_id, packages):
-        """Move package using +/- buttons"""
-        ctx = callback_context
-        if not ctx.triggered or not packages:
-            return packages
+    def position_package_from_grid(n_clicks_list, packages, selected_id):
+        """Move package to clicked grid cell"""
+        if not packages or not selected_id:
+            raise PreventUpdate
         
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
         
+        # Find which cell was clicked
+        trigger = ctx.triggered[0]
+        if trigger['value'] == 0:  # No actual click
+            raise PreventUpdate
+        
+        # Parse the cell coordinates from the trigger ID
+        import json
+        trigger_id = json.loads(trigger['prop_id'].split('.')[0])
+        cell_x = trigger_id['x']
+        cell_y = trigger_id['y']
+        
+        # Update selected package position
+        updated_packages = []
         for pkg in packages:
             if pkg['id'] == selected_id:
-                rotation = pkg.get('rotation', 0)
-                actual_width, actual_height = rotate_dimensions(
-                    pkg['width'], pkg['height'], rotation
-                )
-                
-                if button_id == 'x-minus-btn':
-                    pkg['x'] = max(0, pkg['x'] - MOVE_STEP)
-                elif button_id == 'x-plus-btn':
-                    pkg['x'] = min(TRUCK_LENGTH - actual_width, pkg['x'] + MOVE_STEP)
-                elif button_id == 'y-minus-btn':
-                    pkg['y'] = max(0, pkg['y'] - MOVE_STEP)
-                elif button_id == 'y-plus-btn':
-                    pkg['y'] = min(TRUCK_WIDTH - actual_height, pkg['y'] + MOVE_STEP)
-                elif button_id == 'z-minus-btn':
-                    pkg['z'] = max(0, pkg['z'] - MOVE_STEP)
-                elif button_id == 'z-plus-btn':
-                    pkg['z'] = min(TRUCK_HEIGHT - pkg['depth'], pkg['z'] + MOVE_STEP)
-                break
+                # Center package in the clicked cell
+                pkg['x'] = cell_x
+                pkg['y'] = cell_y
+                print(f"📍 Moved {pkg['name']} to grid cell ({cell_x:.1f}, {cell_y:.1f})")
+            updated_packages.append(pkg)
         
-        return packages
+        return updated_packages
 
     @app.callback(
         Output('packages-store', 'data', allow_duplicate=True),
@@ -221,3 +217,37 @@ def register_callbacks(app):
                 break
         
         return packages
+    
+    @app.callback(
+    Output('packages-store', 'data', allow_duplicate=True),
+    [Input('slider-x', 'value'),
+     Input('slider-y', 'value'),
+     Input('slider-z', 'value')],
+    [State('packages-store', 'data'),
+     State('selected-package-id', 'data')],
+    prevent_initial_call=True
+    )
+    def update_position_from_sliders(x_val, y_val, z_val, packages, selected_id):
+        """Update package position based on slider values"""
+        if not packages or not selected_id:
+            raise PreventUpdate
+        
+        # Find which slider triggered
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+        
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        updated_packages = []
+        for pkg in packages:
+            if pkg['id'] == selected_id:
+                if trigger_id == 'slider-x' and x_val is not None:
+                    pkg['x'] = round(x_val, 2)
+                elif trigger_id == 'slider-y' and y_val is not None:
+                    pkg['y'] = round(y_val, 2)
+                elif trigger_id == 'slider-z' and z_val is not None:
+                    pkg['z'] = round(z_val, 2)
+            updated_packages.append(pkg)
+        
+        return updated_packages

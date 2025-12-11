@@ -110,33 +110,134 @@ def register_callbacks(app):
         return package_items
 
     @app.callback(
-        Output('package-controls', 'children'),
-        [Input('selected-package-id', 'data'),
-         Input('packages-store', 'data')]
+    Output('package-controls', 'children'),
+    [Input('selected-package-id', 'data'),
+     Input('packages-store', 'data')]
     )
     def update_controls(selected_id, packages):
         """Update the control interface for the selected package"""
         if not packages:
-            return html.Div('No package selected', style={'color': '#94a3b8'})
+            return html.Div('No packages loaded', style={'color': '#94a3b8', 'textAlign': 'center'})
         
         selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
         
         if not selected_pkg:
-            return html.Div('Select a package to edit', style={'color': '#94a3b8'})
+            return html.Div('Select a package to edit', style={'color': '#94a3b8', 'textAlign': 'center'})
         
-        rotation = selected_pkg.get('rotation', 0)
-        actual_width, actual_height = rotate_dimensions(
-            selected_pkg['width'], selected_pkg['height'], rotation
-        )
+        from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
         
         return html.Div([
-            _create_quick_actions(),
-            _create_position_control('X', 'Length', selected_pkg['x'], 
-                                    TRUCK_LENGTH - actual_width),
-            _create_position_control('Y', 'Width', selected_pkg['y'], 
-                                    TRUCK_WIDTH - actual_height),
-            _create_position_control('Z', 'Height', selected_pkg['z'], 
-                                    TRUCK_HEIGHT - selected_pkg['depth']),
+            html.H4(f'Editing: {selected_pkg["name"]}', 
+                    style={'color': '#3b82f6', 'marginBottom': '15px'}),
+            
+            # Rotation control
+            html.Div([
+                html.Label('Rotation:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
+                html.Button('🔄 Rotate 90°', id='rotate-btn', n_clicks=0,
+                        style={'width': '100%', 'padding': '8px', 'marginBottom': '15px'})
+            ]),
+            
+            # Position controls with SLIDERS
+            html.Div([
+                html.Label('Position:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
+                
+                # X Position
+                html.Div([
+                    html.Div([
+                        html.Span('X (Length): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
+                        html.Span(f'{selected_pkg["x"]:.2f}m', 
+                                id='x-display',
+                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
+                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-x',
+                        min=0,
+                        max=TRUCK_LENGTH - selected_pkg['width'],
+                        step=0.1,
+                        value=selected_pkg['x'],
+                        marks={0: '0m', TRUCK_LENGTH: f'{TRUCK_LENGTH}m'},
+                        tooltip={"placement": "bottom", "always_visible": False}
+                    )
+                ], style={'marginBottom': '15px'}),
+                
+                # Y Position
+                html.Div([
+                    html.Div([
+                        html.Span('Y (Width): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
+                        html.Span(f'{selected_pkg["y"]:.2f}m', 
+                                id='y-display',
+                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
+                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-y',
+                        min=0,
+                        max=TRUCK_WIDTH - selected_pkg['depth'],
+                        step=0.1,
+                        value=selected_pkg['y'],
+                        marks={0: '0m', TRUCK_WIDTH: f'{TRUCK_WIDTH}m'},
+                        tooltip={"placement": "bottom", "always_visible": False}
+                    )
+                ], style={'marginBottom': '15px'}),
+                
+                # Z Position
+                html.Div([
+                    html.Div([
+                        html.Span('Z (Height): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
+                        html.Span(f'{selected_pkg["z"]:.2f}m', 
+                                id='z-display',
+                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
+                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-z',
+                        min=0,
+                        max=TRUCK_HEIGHT - selected_pkg['height'],
+                        step=0.1,
+                        value=selected_pkg['z'],
+                        marks={0: '0m', TRUCK_HEIGHT: f'{TRUCK_HEIGHT}m'},
+                        tooltip={"placement": "bottom", "always_visible": False}
+                    )
+                ], style={'marginBottom': '15px'}),
+                
+            ], style={
+                'padding': '15px',
+                'backgroundColor': '#334155',
+                'borderRadius': '5px',
+                'marginBottom': '15px'
+            }),
+            
+            # Quick alignment buttons
+            html.Div([
+                html.Label('Quick Align:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
+                html.Div([
+                    html.Button('⬅️ Left', id='align-left-btn', n_clicks=0,
+                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                    html.Button('➡️ Right', id='align-right-btn', n_clicks=0,
+                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                ], style={'display': 'flex', 'marginBottom': '5px'}),
+                html.Div([
+                    html.Button('⬇️ Front', id='align-front-btn', n_clicks=0,
+                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                    html.Button('⬆️ Back', id='align-back-btn', n_clicks=0,
+                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                ], style={'display': 'flex', 'marginBottom': '5px'}),
+                html.Button('⬇️ Floor', id='align-floor-btn', n_clicks=0,
+                        style={'width': '100%', 'padding': '5px', 'fontSize': '11px'})
+            ], style={'marginBottom': '15px'}),
+            
+            # Delete button
+            html.Button('🗑️ Delete Package', 
+                    id='delete-package-btn',
+                    n_clicks=0,
+                    style={
+                        'width': '100%',
+                        'padding': '10px',
+                        'backgroundColor': '#dc2626',
+                        'color': 'white',
+                        'border': 'none',
+                        'borderRadius': '5px',
+                        'cursor': 'pointer',
+                        'fontWeight': 'bold'
+                    })
         ])
 
     @app.callback(
