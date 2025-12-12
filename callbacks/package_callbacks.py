@@ -3,7 +3,7 @@
 from dash import Input, Output, State, callback_context, ALL
 import dash
 from dash.exceptions import PreventUpdate
-import numpy as PreventUpdate
+import numpy as np
 import json
 from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, MOVE_STEP
 from utils.geometry import rotate_dimensions
