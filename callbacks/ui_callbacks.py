@@ -1,7 +1,7 @@
 """Callbacks for UI updates (summary stats, package list, controls)"""
 
 from dash import Input, Output, State, html, dcc
-from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, MOVE_STEP
+from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, MOVE_STEP, DEFAULT_CAMERA
 from utils.geometry import rotate_dimensions, calculate_totals
 from visualization.figures import create_figure
 
@@ -242,12 +242,11 @@ def register_callbacks(app):
 
     @app.callback(
         Output('truck-3d-graph', 'figure'),
-        [Input('packages-store', 'data')],
-        [State('camera-store', 'data')]
+        [Input('packages-store', 'data')]
     )
-    def update_graph(packages, camera):
+    def update_graph(packages):
         """Update the 3D visualization"""
-        return create_figure(packages, camera)
+        return create_figure(packages, DEFAULT_CAMERA)
 
     @app.callback(
         Output('camera-store', 'data'),
@@ -259,6 +258,26 @@ def register_callbacks(app):
         if relayout_data and 'scene.camera' in relayout_data:
             return relayout_data['scene.camera']
         return current_camera
+    
+    @app.callback(
+    Output('camera-display', 'children'),
+    [Input('truck-3d-graph', 'relayoutData')]
+    )
+    def display_camera_position(relayout_data):
+        """Display current camera position for easy config copying"""
+        if relayout_data and 'scene.camera' in relayout_data:
+            camera = relayout_data['scene.camera']
+            eye = camera.get('eye', {})
+            center = camera.get('center', {})
+            up = camera.get('up', {})
+            
+            return html.Pre(f"""DEFAULT_CAMERA = {{
+        'eye': {{'x': {eye.get('x', 0):.2f}, 'y': {eye.get('y', 0):.2f}, 'z': {eye.get('z', 0):.2f}}},
+        'center': {{'x': {center.get('x', 0):.2f}, 'y': {center.get('y', 0):.2f}, 'z': {center.get('z', 0):.2f}}},
+        'up': {{'x': {up.get('x', 0):.2f}, 'y': {up.get('y', 0):.2f}, 'z': {up.get('z', 0):.2f}}}
+    }}""", style={'margin': '0', 'whiteSpace': 'pre-wrap'})
+        
+        return "Rotate the 3D view to see camera values..."
 
 
 def _create_quick_actions():
