@@ -219,25 +219,41 @@ def register_callbacks(app):
         return packages
     
     @app.callback(
-    Output('packages-store', 'data', allow_duplicate=True),
-    [Input('slider-x', 'value'),
-     Input('slider-y', 'value'),
-     Input('slider-z', 'value')],
-    [State('packages-store', 'data'),
-     State('selected-package-id', 'data')],
-    prevent_initial_call=True
+        Output('packages-store', 'data', allow_duplicate=True),
+        [Input('slider-x', 'value'),
+        Input('slider-y', 'value'),
+        Input('slider-z', 'value')],
+        [State('packages-store', 'data'),
+        State('selected-package-id', 'data')],
+        prevent_initial_call=True
     )
     def update_position_from_sliders(x_val, y_val, z_val, packages, selected_id):
         """Update package position based on slider values"""
         if not packages or not selected_id:
             raise PreventUpdate
         
-        # Find which slider triggered
         ctx = dash.callback_context
         if not ctx.triggered:
             raise PreventUpdate
         
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        # Get current package position to check if value actually changed
+        current_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not current_pkg:
+            raise PreventUpdate
+        
+        # Only update if the slider value is different from current position
+        value_changed = False
+        if trigger_id == 'slider-x' and x_val is not None and abs(current_pkg['x'] - x_val) > 0.01:
+            value_changed = True
+        elif trigger_id == 'slider-y' and y_val is not None and abs(current_pkg['y'] - y_val) > 0.01:
+            value_changed = True
+        elif trigger_id == 'slider-z' and z_val is not None and abs(current_pkg['z'] - z_val) > 0.01:
+            value_changed = True
+        
+        if not value_changed:
+            raise PreventUpdate
         
         updated_packages = []
         for pkg in packages:
