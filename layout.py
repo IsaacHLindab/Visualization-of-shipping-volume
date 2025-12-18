@@ -206,6 +206,59 @@ def create_control_panel():
                            style={'width': '100%', 'padding': '5px', 'fontSize': '11px'})
             ], style={'marginBottom': '15px'}),
             
+            # Truck dimensions
+            html.Div([
+                html.H3('🚛 Truck Dimensions', style={'fontSize': '16px', 'marginBottom': '10px'}),
+                html.Div([
+                    html.Label('Length (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-truck-length',
+                        type='number',
+                        min=4,
+                        max=50,
+                        step=0.01,
+                        value=TRUCK_LENGTH,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '8px'}
+                    )
+                ]),
+                html.Div([
+                    html.Label('Width (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-truck-width',
+                        type='number',
+                        min=2,
+                        max=10,
+                        step=0.01,
+                        value=TRUCK_WIDTH,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '8px'}
+                    )
+                ]),
+                html.Div([
+                    html.Label('Height (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-truck-height',
+                        type='number',
+                        min=2,
+                        max=10,
+                        step=0.01,
+                        value=TRUCK_HEIGHT,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '8px'}
+                    )
+                ]),
+                html.Button('Reset to Default', 
+                            id='reset-truck-btn', 
+                            n_clicks=0,
+                            style={
+                                'width': '100%',
+                                'padding': '5px',
+                                'fontSize': '11px',
+                                'backgroundColor': '#475569',
+                                'color': 'white',
+                                'border': 'none',
+                                'borderRadius': '3px',
+                                'cursor': 'pointer'
+                            })
+            ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
         ], id='controls-container')
         
     ], id='control-panel', style={
@@ -241,7 +294,12 @@ def create_data_stores():
         dcc.Store(id='package-counter', data=len(INITIAL_PACKAGES)),  
         dcc.Store(id='keyboard-event-store', data=None), # register keyboard events
         dcc.Store(id='camera-store', data=None), # store camera position inbetween renders
-        dcc.Location(id='url', refresh=False) # used to fetch transport order in url parameter
+        dcc.Location(id='url', refresh=False), # used to fetch transport order in url parameter
+        dcc.Store(id='truck-dimensions', data={
+            'length': TRUCK_LENGTH,
+            'width': TRUCK_WIDTH,
+            'height': TRUCK_HEIGHT
+        })
     ]
 
 def create_floor_grid():

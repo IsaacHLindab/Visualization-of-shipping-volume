@@ -1,6 +1,8 @@
 """Callbacks for UI updates (summary stats, package list, controls)"""
 
 from dash import Input, Output, State, html, dcc
+import dash
+from dash.exceptions import PreventUpdate
 from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, MOVE_STEP, DEFAULT_CAMERA
 from utils.geometry import rotate_dimensions, calculate_totals
 from visualization.figures import create_figure
@@ -112,11 +114,16 @@ def register_callbacks(app):
 
     @app.callback(
         Output('truck-3d-graph', 'figure'),
-        [Input('packages-store', 'data')]
+        [Input('packages-store', 'data'),
+        Input('truck-dimensions', 'data')]
     )
-    def update_graph(packages):
+    def update_graph(packages, truck_dims):
         """Update the 3D visualization"""
-        return create_figure(packages, DEFAULT_CAMERA)
+        if truck_dims:
+            from visualization.figures import create_figure_custom
+            return create_figure_custom(packages, DEFAULT_CAMERA, truck_dims)
+        else:
+            return create_figure(packages, DEFAULT_CAMERA)
 
     @app.callback(
         Output('camera-store', 'data'),
@@ -233,6 +240,65 @@ def register_callbacks(app):
             selected_pkg['height'],
             selected_pkg['weight']
         )
+    
+    @app.callback(
+    Output('truck-dimensions', 'data'),
+    [Input('input-truck-length', 'value'),
+     Input('input-truck-width', 'value'),
+     Input('input-truck-height', 'value'),
+     Input('reset-truck-btn', 'n_clicks')],
+    [State('truck-dimensions', 'data')],
+    prevent_initial_call=True
+    )
+    def update_truck_dimensions(length, width, height, reset_clicks, current_dims):
+        """Update truck dimensions or reset to default"""
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+        
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        # Reset to default
+        if trigger_id == 'reset-truck-btn':
+            from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+            print(f"🔄 Reset truck to default: {TRUCK_LENGTH}x{TRUCK_WIDTH}x{TRUCK_HEIGHT}m")
+            return {
+                'length': TRUCK_LENGTH,
+                'width': TRUCK_WIDTH,
+                'height': TRUCK_HEIGHT
+            }
+        
+        # Update individual dimension
+        new_dims = {**current_dims}
+        
+        if trigger_id == 'input-truck-length' and length and length >= 1:
+            if abs(new_dims['length'] - length) > 0.01:  # Only if changed
+                new_dims['length'] = length
+                print(f"📏 Updated truck length: {length}m")
+        elif trigger_id == 'input-truck-width' and width and width >= 1:
+            if abs(new_dims['width'] - width) > 0.01:
+                new_dims['width'] = width
+                print(f"📏 Updated truck width: {width}m")
+        elif trigger_id == 'input-truck-height' and height and height >= 1:
+            if abs(new_dims['height'] - height) > 0.01:
+                new_dims['height'] = height
+                print(f"📏 Updated truck height: {height}m")
+        else:
+            raise PreventUpdate
+        
+        return new_dims
+    
+    @app.callback(
+    [Output('input-truck-length', 'value'),
+     Output('input-truck-width', 'value'),
+     Output('input-truck-height', 'value')],
+    [Input('reset-truck-btn', 'n_clicks')],
+    prevent_initial_call=True
+    )
+    def reset_truck_inputs(n_clicks):
+        """Reset truck dimension inputs to default"""
+        from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+        return TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
 
 def _create_quick_actions():
     """Create quick action buttons section"""
