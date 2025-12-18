@@ -69,8 +69,8 @@ def create_control_panel():
                 html.Div([
                     dcc.Checklist(
                         id='auto-stack-toggle',
-                        options=[{'label': ' Auto-stack when overlapping', 'value': 'enabled'}],
-                        value=[],  # Empty = disabled by default
+                        options=[{'label': ' Smart stacking', 'value': 'enabled'}],
+                        value=[],
                         style={'color': '#cbd5e1', 'fontSize': '12px'}
                     )
                 ], style={'marginBottom': '10px'}),
