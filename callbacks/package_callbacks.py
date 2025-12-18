@@ -266,3 +266,90 @@ def register_callbacks(app):
             updated_packages.append(pkg)
         
         return updated_packages
+    
+    @app.callback(
+    Output('packages-store', 'data', allow_duplicate=True),
+    [Input('input-width', 'value'),
+     Input('input-depth', 'value'),
+     Input('input-height', 'value'),
+     Input('input-weight', 'value')],
+    [State('selected-package-id', 'data'),
+     State('packages-store', 'data')],
+    prevent_initial_call=True
+    )
+    def update_package_properties(width, depth, height, weight, selected_id, packages):
+        """Update package dimensions and weight"""
+        if not packages or not selected_id:
+            raise PreventUpdate
+        
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            raise PreventUpdate
+        
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        # Get current package to check if value actually changed
+        current_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not current_pkg:
+            raise PreventUpdate
+        
+        # Check if value actually changed (prevent spam from position updates)
+        value_changed = False
+        if trigger_id == 'input-width' and width is not None:
+            if abs(current_pkg['width'] - width) > 0.001:
+                value_changed = True
+        elif trigger_id == 'input-depth' and depth is not None:
+            if abs(current_pkg['depth'] - depth) > 0.001:
+                value_changed = True
+        elif trigger_id == 'input-height' and height is not None:
+            if abs(current_pkg['height'] - height) > 0.001:
+                value_changed = True
+        elif trigger_id == 'input-weight' and weight is not None:
+            if abs(current_pkg['weight'] - weight) > 0.1:
+                value_changed = True
+        
+        if not value_changed:
+            raise PreventUpdate
+        
+        # Validate inputs
+        if width is not None and width < 0.1:
+            raise PreventUpdate
+        if depth is not None and depth < 0.5:
+            raise PreventUpdate
+        if height is not None and height < 0.5:
+            raise PreventUpdate
+        if weight is not None and weight < 50:
+            raise PreventUpdate
+        
+        updated_packages = []
+        for pkg in packages:
+            if pkg['id'] == selected_id:
+                updated_pkg = {**pkg}
+                
+                if trigger_id == 'input-width' and width is not None:
+                    updated_pkg['width'] = round(width, 2)
+                    print(f"📏 Updated width: {width:.2f}m")
+                elif trigger_id == 'input-depth' and depth is not None:
+                    updated_pkg['depth'] = round(depth, 2)
+                    print(f"📏 Updated depth: {depth:.2f}m")
+                elif trigger_id == 'input-height' and height is not None:
+                    updated_pkg['height'] = round(height, 2)
+                    print(f"📏 Updated height: {height:.2f}m")
+                elif trigger_id == 'input-weight' and weight is not None:
+                    updated_pkg['weight'] = round(weight, 1)
+                    print(f"⚖️ Updated weight: {weight:.1f}kg")
+                
+                # Ensure package doesn't go out of bounds after dimension change
+                rotation = updated_pkg.get('rotation', 0)
+                actual_width, actual_height = rotate_dimensions(
+                    updated_pkg['width'], updated_pkg['height'], rotation
+                )
+                updated_pkg['x'] = min(updated_pkg['x'], TRUCK_LENGTH - actual_width)
+                updated_pkg['y'] = min(updated_pkg['y'], TRUCK_WIDTH - actual_height)
+                updated_pkg['z'] = min(updated_pkg['z'], TRUCK_HEIGHT - updated_pkg['depth'])
+                
+                updated_packages.append(updated_pkg)
+            else:
+                updated_packages.append(pkg)
+        
+        return updated_packages

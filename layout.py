@@ -118,7 +118,75 @@ def create_control_panel():
                 'borderRadius': '5px',
                 'marginBottom': '15px'
             }),
-            
+
+            # Dimension and weight controls
+            html.Div([
+                html.Label('Package Properties:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
+                
+                # Dimensions
+                html.Div([
+                    html.Label('Width (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-width',
+                        type='number',
+                        min=0.1,
+                        max=TRUCK_LENGTH,
+                        step=0.01,
+                        placeholder='Width',
+                        disabled=True,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
+                    )
+                ]),
+                
+                html.Div([
+                    html.Label('Depth (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-depth',
+                        type='number',
+                        min=0.1,
+                        max=TRUCK_WIDTH,
+                        step=0.01,
+                        placeholder='Depth',
+                        disabled=True,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
+                    )
+                ]),
+                
+                html.Div([
+                    html.Label('Height (m):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-height',
+                        type='number',
+                        min=0.1,
+                        max=TRUCK_HEIGHT,
+                        step=0.01,
+                        placeholder='Height',
+                        disabled=True,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
+                    )
+                ]),
+                
+                html.Div([
+                    html.Label('Weight (kg):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
+                    dcc.Input(
+                        id='input-weight',
+                        type='number',
+                        min=1,
+                        max=10000,
+                        step=1,
+                        placeholder='Weight',
+                        disabled=True,
+                        style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
+                    )
+                ]),
+                
+            ], style={
+                'padding': '15px',
+                'backgroundColor': '#334155',
+                'borderRadius': '5px',
+                'marginBottom': '15px'
+            }),
+
             # Quick align buttons
             html.Div([
                 html.Label('Quick Align:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),

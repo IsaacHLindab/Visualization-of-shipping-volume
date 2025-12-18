@@ -136,7 +136,11 @@ def register_callbacks(app):
      Output('slider-z', 'disabled'),
      Output('slider-x', 'max'),
      Output('slider-y', 'max'),
-     Output('slider-z', 'max')],
+     Output('slider-z', 'max'),
+     Output('input-width', 'disabled'),
+     Output('input-depth', 'disabled'),
+     Output('input-height', 'disabled'),
+     Output('input-weight', 'disabled')],
     [Input('selected-package-id', 'data'),
      Input('packages-store', 'data')]
     )
@@ -145,8 +149,9 @@ def register_callbacks(app):
         if not packages or not selected_id:
             return (
                 'Select a package to edit',
-                True, True, True,  # All disabled
-                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+                True, True, True,  # Sliders disabled
+                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT,
+                True, True, True, True  # Inputs disabled
             )
         
         selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
@@ -169,8 +174,9 @@ def register_callbacks(app):
         
         return (
             f"Editing: {selected_pkg['name']}",
-            False, False, False,  # All enabled
-            max_x, max_y, max_z
+            False, False, False,  # Sliders enabled
+            max_x, max_y, max_z,
+            False, False, False, False  # Inputs enabled
         )
 
 
@@ -203,7 +209,30 @@ def register_callbacks(app):
             f'Y (Width): {y:.2f}m',
             f'Z (Height): {z:.2f}m'
     )
-
+    
+    @app.callback(
+        [Output('input-width', 'value'),
+        Output('input-depth', 'value'),
+        Output('input-height', 'value'),
+        Output('input-weight', 'value')],
+        [Input('selected-package-id', 'data'),
+        Input('packages-store', 'data')]
+    )
+    def update_property_inputs(selected_id, packages):
+        """Update property input values to match selected package"""
+        if not packages or not selected_id:
+            return None, None, None, None
+        
+        selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not selected_pkg:
+            return None, None, None, None
+        
+        return (
+            selected_pkg['width'],
+            selected_pkg['depth'],
+            selected_pkg['height'],
+            selected_pkg['weight']
+        )
 
 def _create_quick_actions():
     """Create quick action buttons section"""
