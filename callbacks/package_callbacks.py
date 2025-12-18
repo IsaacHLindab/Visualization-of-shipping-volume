@@ -173,7 +173,6 @@ def register_callbacks(app):
             raise PreventUpdate
         
         # Parse the cell coordinates from the trigger ID
-        import json
         trigger_id = json.loads(trigger['prop_id'].split('.')[0])
         cell_x = trigger_id['x']
         cell_y = trigger_id['y']
