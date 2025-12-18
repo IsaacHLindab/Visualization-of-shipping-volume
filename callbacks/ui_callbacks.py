@@ -147,7 +147,8 @@ def register_callbacks(app):
      Output('input-width', 'disabled'),
      Output('input-depth', 'disabled'),
      Output('input-height', 'disabled'),
-     Output('input-weight', 'disabled')],
+     Output('input-weight', 'disabled'),
+     Output('stackable-container', 'style')],
     [Input('selected-package-id', 'data'),
      Input('packages-store', 'data')]
     )
@@ -158,7 +159,8 @@ def register_callbacks(app):
                 'Select a package to edit',
                 True, True, True,  # Sliders disabled
                 TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT,
-                True, True, True, True  # Inputs disabled
+                True, True, True, True, # Inputs disabled
+                {'display': 'none'} # stackable check box hidden
             )
         
         selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
@@ -166,7 +168,9 @@ def register_callbacks(app):
             return (
                 'Select a package to edit',
                 True, True, True,
-                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT,
+                True, True, True, True, 
+                {'display': 'none'}
             )
         
         # Calculate max values based on package dimensions
@@ -183,7 +187,8 @@ def register_callbacks(app):
             f"Editing: {selected_pkg['name']}",
             False, False, False,  # Sliders enabled
             max_x, max_y, max_z,
-            False, False, False, False  # Inputs enabled
+            False, False, False, False,  # Inputs enabled
+            {'display': 'block', 'fontSize': '12px', 'marginBottom': '10px'}  # Visible stackable checkbox
         )
 
 
@@ -299,6 +304,22 @@ def register_callbacks(app):
         """Reset truck dimension inputs to default"""
         from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
         return TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+
+    @app.callback(
+    Output('input-stackable', 'value'),
+    [Input('selected-package-id', 'data'),
+     Input('packages-store', 'data')]
+    )
+    def update_stackable_checkbox(selected_id, packages):
+        """Update stackable checkbox to match selected package"""
+        if not packages or not selected_id:
+            return []
+        
+        selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not selected_pkg:
+            return []
+        
+        return ['stackable'] if selected_pkg.get('stackable', False) else []
 
 def _create_quick_actions():
     """Create quick action buttons section"""

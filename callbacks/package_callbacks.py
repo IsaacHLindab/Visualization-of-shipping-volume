@@ -155,11 +155,13 @@ def register_callbacks(app):
         Output('packages-store', 'data', allow_duplicate=True),
         [Input({'type': 'grid-cell', 'x': ALL, 'y': ALL}, 'n_clicks')],
         [State('packages-store', 'data'),
-        State('selected-package-id', 'data')],
+        State('selected-package-id', 'data'),
+        State('auto-stack-toggle', 'value'),
+        State('truck-dimensions', 'data')],
         prevent_initial_call=True
     )
-    def position_package_from_grid(n_clicks_list, packages, selected_id):
-        """Move package to clicked grid cell"""
+    def position_package_from_grid(n_clicks_list, packages, selected_id, auto_stack, truck_dims):
+        """Move package to clicked grid cell with optional auto-stacking"""
         if not packages or not selected_id:
             raise PreventUpdate
         
@@ -181,10 +183,69 @@ def register_callbacks(app):
         updated_packages = []
         for pkg in packages:
             if pkg['id'] == selected_id:
-                # Center package in the clicked cell
+                # Update X/Y position
                 pkg['x'] = cell_x
                 pkg['y'] = cell_y
-                print(f"📍 Moved {pkg['name']} to grid cell ({cell_x:.1f}, {cell_y:.1f})")
+                
+                # AUTO-STACK LOGIC
+                if auto_stack and 'enabled' in auto_stack and pkg.get('stackable', False):
+                    from utils.geometry import rotate_dimensions
+                    
+                    truck_height = truck_dims.get('height', TRUCK_HEIGHT) if truck_dims else TRUCK_HEIGHT
+                    rotation = pkg.get('rotation', 0)
+                    actual_width, actual_height = rotate_dimensions(
+                        pkg['width'], pkg['height'], rotation
+                    )
+                    
+                    sel_x1 = pkg['x']
+                    sel_x2 = pkg['x'] + actual_width
+                    sel_y1 = pkg['y']
+                    sel_y2 = pkg['y'] + actual_height
+                    
+                    max_z = 0
+                    found_overlap = False
+                    
+                    for other_pkg in packages:
+                        if other_pkg['id'] == selected_id:
+                            continue
+                        
+                        other_rotation = other_pkg.get('rotation', 0)
+                        other_width, other_height = rotate_dimensions(
+                            other_pkg['width'], other_pkg['height'], other_rotation
+                        )
+                        
+                        other_x1 = other_pkg['x']
+                        other_x2 = other_pkg['x'] + other_width
+                        other_y1 = other_pkg['y']
+                        other_y2 = other_pkg['y'] + other_height
+                        
+                        x_overlap = not (sel_x2 <= other_x1 or sel_x1 >= other_x2)
+                        y_overlap = not (sel_y2 <= other_y1 or sel_y1 >= other_y2)
+                        
+                        if x_overlap and y_overlap:
+                            found_overlap = True
+                            other_top = other_pkg['z'] + other_pkg['depth']
+                            if other_top > max_z:
+                                max_z = other_top
+                    
+                    if found_overlap and max_z > 0:
+                        new_z = max_z + 0.1
+                        
+                        if new_z + pkg['depth'] <= truck_height:
+                            pkg['z'] = round(new_z, 2)
+                            print(f"📍 Grid placed + auto-stacked {pkg['name']} at ({cell_x:.1f}, {cell_y:.1f}, {new_z:.2f})")
+                        else:
+                            print(f"⚠️ Can't stack {pkg['name']} - would exceed truck height")
+                            pkg['z'] = 0.0  # Keep at ground
+                            print(f"📍 Moved {pkg['name']} to grid cell ({cell_x:.1f}, {cell_y:.1f}) at ground")
+                    elif not found_overlap:
+                        # No overlap - reset to ground
+                        pkg['z'] = 0.0
+                        print(f"📍 Grid placed {pkg['name']} at ground ({cell_x:.1f}, {cell_y:.1f})")
+                else:
+                    # Auto-stack disabled or not stackable
+                    print(f"📍 Moved {pkg['name']} to grid cell ({cell_x:.1f}, {cell_y:.1f})")
+                
             updated_packages.append(pkg)
         
         return updated_packages
@@ -223,11 +284,13 @@ def register_callbacks(app):
         Input('slider-y', 'value'),
         Input('slider-z', 'value')],
         [State('packages-store', 'data'),
-        State('selected-package-id', 'data')],
+        State('selected-package-id', 'data'),
+        State('auto-stack-toggle', 'value'),
+        State('truck-dimensions', 'data')],
         prevent_initial_call=True
     )
-    def update_position_from_sliders(x_val, y_val, z_val, packages, selected_id):
-        """Update package position based on slider values"""
+    def update_position_from_sliders(x_val, y_val, z_val, packages, selected_id, auto_stack, truck_dims):
+        """Update package position based on slider values, with optional auto-stacking"""
         if not packages or not selected_id:
             raise PreventUpdate
         
@@ -237,12 +300,12 @@ def register_callbacks(app):
         
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
         
-        # Get current package position to check if value actually changed
+        # Get current package
         current_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
         if not current_pkg:
             raise PreventUpdate
         
-        # Only update if the slider value is different from current position
+        # Check if value actually changed
         value_changed = False
         if trigger_id == 'slider-x' and x_val is not None and abs(current_pkg['x'] - x_val) > 0.01:
             value_changed = True
@@ -254,31 +317,96 @@ def register_callbacks(app):
         if not value_changed:
             raise PreventUpdate
         
+        # Update package position
         updated_packages = []
         for pkg in packages:
             if pkg['id'] == selected_id:
+                updated_pkg = {**pkg}
+                
                 if trigger_id == 'slider-x' and x_val is not None:
-                    pkg['x'] = round(x_val, 2)
+                    updated_pkg['x'] = round(x_val, 2)
                 elif trigger_id == 'slider-y' and y_val is not None:
-                    pkg['y'] = round(y_val, 2)
+                    updated_pkg['y'] = round(y_val, 2)
                 elif trigger_id == 'slider-z' and z_val is not None:
-                    pkg['z'] = round(z_val, 2)
-            updated_packages.append(pkg)
+                    updated_pkg['z'] = round(z_val, 2)
+                
+                # AUTO-STACK LOGIC (only for X/Y changes, not Z)
+                if auto_stack and 'enabled' in auto_stack and trigger_id in ['slider-x', 'slider-y']:
+                    if updated_pkg.get('stackable', False):
+                        # Calculate overlap and find stacking position
+                        from utils.geometry import rotate_dimensions
+                        
+                        truck_height = truck_dims.get('height', TRUCK_HEIGHT) if truck_dims else TRUCK_HEIGHT
+                        rotation = updated_pkg.get('rotation', 0)
+                        actual_width, actual_height = rotate_dimensions(
+                            updated_pkg['width'], updated_pkg['height'], rotation
+                        )
+                        
+                        sel_x1 = updated_pkg['x']
+                        sel_x2 = updated_pkg['x'] + actual_width
+                        sel_y1 = updated_pkg['y']
+                        sel_y2 = updated_pkg['y'] + actual_height
+                        
+                        max_z = 0
+                        found_overlap = False
+                        
+                        for other_pkg in packages:
+                            if other_pkg['id'] == selected_id:
+                                continue
+                            
+                            other_rotation = other_pkg.get('rotation', 0)
+                            other_width, other_height = rotate_dimensions(
+                                other_pkg['width'], other_pkg['height'], other_rotation
+                            )
+                            
+                            other_x1 = other_pkg['x']
+                            other_x2 = other_pkg['x'] + other_width
+                            other_y1 = other_pkg['y']
+                            other_y2 = other_pkg['y'] + other_height
+                            
+                            x_overlap = not (sel_x2 <= other_x1 or sel_x1 >= other_x2)
+                            y_overlap = not (sel_y2 <= other_y1 or sel_y1 >= other_y2)
+                            
+                            if x_overlap and y_overlap:
+                                found_overlap = True
+                                other_top = other_pkg['z'] + other_pkg['depth']
+                                if other_top > max_z:
+                                    max_z = other_top
+                        
+                        if found_overlap and max_z > 0:
+                            new_z = max_z + 0.1
+                            
+                            if new_z + updated_pkg['depth'] <= truck_height:
+                                updated_pkg['z'] = round(new_z, 2)
+                                print(f"📦 Auto-stacked {updated_pkg['name']} at Z={new_z:.2f}m")
+                            else:
+                                print(f"⚠️ Can't stack {updated_pkg['name']} - would exceed truck height")
+                        elif not found_overlap and max_z == 0:
+                            # No overlap - reset to ground if it was stacked
+                            if updated_pkg['z'] > 0.1:
+                                updated_pkg['z'] = 0.0
+                                print(f"📦 {updated_pkg['name']} moved to ground (no overlap)")
+                
+                updated_packages.append(updated_pkg)
+            else:
+                updated_packages.append(pkg)
         
         return updated_packages
     
     @app.callback(
-    Output('packages-store', 'data', allow_duplicate=True),
-    [Input('input-width', 'value'),
-     Input('input-depth', 'value'),
-     Input('input-height', 'value'),
-     Input('input-weight', 'value')],
-    [State('selected-package-id', 'data'),
-     State('packages-store', 'data')],
-    prevent_initial_call=True
+        Output('packages-store', 'data', allow_duplicate=True),
+        [Input('input-width', 'value'),
+        Input('input-depth', 'value'),
+        Input('input-height', 'value'),
+        Input('input-weight', 'value'),
+        Input('input-stackable', 'value')],
+        [State('selected-package-id', 'data'),
+        State('packages-store', 'data'),
+        State('truck-dimensions', 'data')],  # ADD THIS
+        prevent_initial_call=True
     )
-    def update_package_properties(width, depth, height, weight, selected_id, packages):
-        """Update package dimensions and weight"""
+    def update_package_properties(width, depth, height, weight, stackable, selected_id, packages, truck_dims):
+        """Update package dimensions, weight, and stackable property"""
         if not packages or not selected_id:
             raise PreventUpdate
         
@@ -287,6 +415,19 @@ def register_callbacks(app):
             raise PreventUpdate
         
         trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        # Handle stackable checkbox
+        if trigger_id == 'input-stackable':
+            updated_packages = []
+            for pkg in packages:
+                if pkg['id'] == selected_id:
+                    updated_pkg = {**pkg}
+                    updated_pkg['stackable'] = 'stackable' in (stackable or [])
+                    print(f"📦 Updated stackable: {updated_pkg['stackable']}")
+                    updated_packages.append(updated_pkg)
+                else:
+                    updated_packages.append(pkg)
+            return updated_packages
         
         # Get current package to check if value actually changed
         current_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
@@ -321,6 +462,11 @@ def register_callbacks(app):
         if weight is not None and weight < 50:
             raise PreventUpdate
         
+        # Get truck dimensions (use custom or defaults)
+        truck_length = truck_dims.get('length', TRUCK_LENGTH) if truck_dims else TRUCK_LENGTH
+        truck_width = truck_dims.get('width', TRUCK_WIDTH) if truck_dims else TRUCK_WIDTH
+        truck_height = truck_dims.get('height', TRUCK_HEIGHT) if truck_dims else TRUCK_HEIGHT
+        
         updated_packages = []
         for pkg in packages:
             if pkg['id'] == selected_id:
@@ -344,9 +490,9 @@ def register_callbacks(app):
                 actual_width, actual_height = rotate_dimensions(
                     updated_pkg['width'], updated_pkg['height'], rotation
                 )
-                updated_pkg['x'] = min(updated_pkg['x'], TRUCK_LENGTH - actual_width)
-                updated_pkg['y'] = min(updated_pkg['y'], TRUCK_WIDTH - actual_height)
-                updated_pkg['z'] = min(updated_pkg['z'], TRUCK_HEIGHT - updated_pkg['depth'])
+                updated_pkg['x'] = min(updated_pkg['x'], truck_length - actual_width)
+                updated_pkg['y'] = min(updated_pkg['y'], truck_width - actual_height)
+                updated_pkg['z'] = min(updated_pkg['z'], truck_height - updated_pkg['depth'])
                 
                 updated_packages.append(updated_pkg)
             else:

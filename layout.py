@@ -47,7 +47,7 @@ def create_control_panel():
             html.Div(id='package-list', style={'maxHeight': '300px', 'overflowY': 'auto'})
         ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
         
-        # STATIC EDIT CONTROLS (always present)
+        # Edit controls
         html.Div([
             html.H3('Edit Package', style={'fontSize': '16px', 'marginBottom': '10px'}),
             html.Div(id='selected-package-name', 
@@ -61,10 +61,20 @@ def create_control_panel():
             # Grid
             create_floor_grid(),
             
-            # Position sliders (STATIC - always present)
+            # Position sliders
             html.Div([
                 html.Label('Position Controls:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
                 
+                # Auto-stack togle
+                html.Div([
+                    dcc.Checklist(
+                        id='auto-stack-toggle',
+                        options=[{'label': ' Auto-stack when overlapping', 'value': 'enabled'}],
+                        value=[],  # Empty = disabled by default
+                        style={'color': '#cbd5e1', 'fontSize': '12px'}
+                    )
+                ], style={'marginBottom': '10px'}),
+
                 # X slider
                 html.Div([
                     html.Div(id='x-position-display', children='X: --', 
@@ -179,6 +189,20 @@ def create_control_panel():
                         style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
                     )
                 ]),
+
+                html.Div([
+                    html.Label(
+                        [
+                            dcc.Checklist(
+                                id='input-stackable',
+                                options=[{'label': ' Can be stacked on top', 'value': 'stackable'}],
+                                value=[],
+                                style={'color': '#cbd5e1'}
+                            )
+                        ],
+                        style={'fontSize': '12px', 'marginBottom': '10px'}
+                    )
+                ], id='stackable-container', style={'display': 'none'})
                 
             ], style={
                 'padding': '15px',
