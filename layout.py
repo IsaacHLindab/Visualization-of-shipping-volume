@@ -32,23 +32,10 @@ def create_control_panel():
     return html.Div([
         html.H2('🚛 Truck Loading Control', style={'marginBottom': '20px'}),
         
-        # Order input section
-        html.Div([
-            html.Label('Load Order:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
-            html.Div(id='url-order-info', style={'marginBottom': '10px', 'color': '#cbd5e1'}),
-            dcc.Input(
-                id='order-input',
-                type='text',
-                placeholder='Enter order number...',
-                style={'width': '70%', 'padding': '8px', 'marginRight': '5px'}
-            ),
-            html.Button('Load', id='load-order-btn', n_clicks=0,
-                       style={'padding': '8px 15px', 'cursor': 'pointer'})
-        ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
-        
         # Summary stats
         html.Div([
             html.H3('Summary', style={'fontSize': '16px', 'marginBottom': '10px'}),
+            html.Div(id='url-order-info', style={'marginBottom': '10px', 'color': '#cbd5e1'}),
             html.Div(id='summary-stats')
         ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
         

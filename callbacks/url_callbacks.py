@@ -88,39 +88,29 @@ def register_callbacks(app):
     
     @app.callback(
         [Output('packages-store', 'data', allow_duplicate=True),
-         Output('package-counter', 'data', allow_duplicate=True),],
-        [Input('url', 'href'),
-         Input('load-order-btn', 'n_clicks')],
-        [State('order-input', 'value')],
+        Output('package-counter', 'data', allow_duplicate=True)],
+        [Input('url', 'href')],
         prevent_initial_call=True
     )
-    
-    def load_packages_from_order_data(href, load_clicks, manual_order):
-        """Loads packages from order data based on URL parameter or manual input"""
-        from urllib.parse import unquote
+    def load_packages_from_order_data(href):
+        """Load packages from order data based on URL parameter from Power BI"""   
+        if not href:
+            from config import INITIAL_PACKAGES
+            return INITIAL_PACKAGES, len(INITIAL_PACKAGES)
         
-        ctx = callback_context
-        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        order_number = None
-        package_data = None
+        parsed = urlparse(href)
+        params = parse_qs(parsed.query)
+        order_number = params.get('order', [None])[0]
+        package_data = params.get('packages', [None])[0]
         
-        # Check which input triggered the load
-        if trigger_id == 'load-order-btn' and manual_order:
-            order_number = manual_order
-            print(f"Loading order from manual input: {order_number}")
-        elif trigger_id == 'url' and href:
-            parsed = urlparse(href)
-            params = parse_qs(parsed.query)
-            order_number = params.get('order', [None])[0]
-            package_data = params.get('packages', [None])[0]
-            
-            # Console debug for packages
-            print(f"🔍 POWER BI DATA RECEIVED")
-            print(f"Order ID: {order_number}")
-            print(f"Package Data Length: {len(package_data) if package_data else 0} chars")
-            if package_data:
-                print(f"Package Data Preview: {package_data[:100]}...")
-            print(f"{'='*60}\n")
+        print(f"\n{'='*60}")
+        print(f"🔍 POWER BI DATA RECEIVED")
+        print(f"{'='*60}")
+        print(f"Order ID: {order_number}")
+        print(f"Package Data Length: {len(package_data) if package_data else 0} chars")
+        if package_data:
+            print(f"Package Data Preview: {package_data[:100]}...")
+        print(f"{'='*60}\n")
         
         # Try to parse Power BI package data first
         if package_data:
@@ -133,32 +123,15 @@ def register_callbacks(app):
                 print()
                 return packages, len(packages)
         
-        # Fallback to demo packages
+        # Fallback to demo packages if only order number provided
         if order_number:
             print(f"⚠️ No package data in URL, using demo packages for order {order_number}")
             packages = create_demo_packages_for_order(order_number)
             return packages, len(packages)
         
-        # If no order, return empty/default
+        # No order in URL
         from config import INITIAL_PACKAGES
         return INITIAL_PACKAGES, len(INITIAL_PACKAGES)
-    
-    @app.callback(
-        Output('url-order-info', 'children', allow_duplicate=True),
-        [Input('load-order-btn', 'n_clicks'),
-         State('order-input', 'value')],
-        prevent_initial_call=True
-    )
-    def load_order_number(n_clicks, manual_order_number):
-        """Change order number display in UI when clicking load button"""
-        return html.Div([
-                html.Span('📋 Order: ', style={'color': '#cbd5e1'}),
-                html.Span(manual_order_number, style={'color': '#3b82f6', 'fontWeight': 'bold'}),
-                html.Span(
-                    f'', 
-                    style={'color': '#94a3b8', 'fontSize': '12px', 'marginLeft': '5px'}
-                )
-            ])
 
 
 def create_demo_packages_for_order(order_number):
