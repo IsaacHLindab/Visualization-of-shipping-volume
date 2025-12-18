@@ -28,102 +28,132 @@ def create_layout():
 
 
 def create_control_panel():
-    # Read the id of each element for a description of what it is used for
-
+    """Create the left control panel"""
     return html.Div([
         html.H2('🚛 Truck Loading Control', style={'marginBottom': '20px'}),
         
+        # Order input section
         html.Div([
-            html.Label('Order Number:', style={
-                'fontSize': '14px', 
-                'marginBottom': '5px',
-                'display': 'block',
-                'fontWeight': 'bold'
-            }),
+            html.Label('Load Order:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
+            html.Div(id='url-order-info', style={'marginBottom': '10px', 'color': '#cbd5e1'}),
+            dcc.Input(
+                id='order-input',
+                type='text',
+                placeholder='Enter order number...',
+                style={'width': '70%', 'padding': '8px', 'marginRight': '5px'}
+            ),
+            html.Button('Load', id='load-order-btn', n_clicks=0,
+                       style={'padding': '8px 15px', 'cursor': 'pointer'})
+        ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
+        
+        # Summary stats
+        html.Div([
+            html.H3('Summary', style={'fontSize': '16px', 'marginBottom': '10px'}),
+            html.Div(id='summary-stats')
+        ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
+        
+        # Package list
+        html.Div([
+            html.H3('Packages', style={'fontSize': '16px', 'marginBottom': '10px'}),
+            html.Button('➕ Add Package', id='add-package-btn', n_clicks=0,
+                       style={'width': '100%', 'padding': '8px', 'marginBottom': '10px', 'cursor': 'pointer'}),
+            html.Div(id='package-list', style={'maxHeight': '300px', 'overflowY': 'auto'})
+        ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
+        
+        # STATIC EDIT CONTROLS (always present)
+        html.Div([
+            html.H3('Edit Package', style={'fontSize': '16px', 'marginBottom': '10px'}),
+            html.Div(id='selected-package-name', 
+                    children='Select a package to edit',
+                    style={'color': '#94a3b8', 'marginBottom': '15px', 'fontStyle': 'italic'}),
+            
+            # Rotation
+            html.Button('🔄 Rotate 90°', id='rotate-btn', n_clicks=0,
+                       style={'width': '100%', 'padding': '8px', 'marginBottom': '15px'}),
+            
+            # Grid
+            create_floor_grid(),
+            
+            # Position sliders (STATIC - always present)
             html.Div([
-                dcc.Input(
-                    id='order-input',
-                    type='text',
-                    placeholder='Enter order number...',
-                    style={
-                        'width': '70%',
-                        'padding': '8px',
-                        'borderRadius': '5px',
-                        'border': '1px solid #475569',
-                        'backgroundColor': '#334155',
-                        'color': 'white',
-                        'marginRight': '5px'
-                    }
-                ),
-                html.Button(
-                    '🔍 Load',
-                    id='load-order-btn',
-                    n_clicks=0,
-                    style={
-                        'padding': '8px 15px',
-                        'backgroundColor': '#10b981',
-                        'color': 'white',
-                        'border': 'none',
-                        'borderRadius': '5px',
-                        'cursor': 'pointer',
-                        'fontSize': '14px'
-                    }
-                )
-            ], style={'display': 'flex', 'alignItems': 'center'})
-        ], style={
-            'padding': '15px',
-            'backgroundColor': '#334155',
-            'borderRadius': '5px',
-            'marginBottom': '20px'
-        }),
-
-        html.Div(
-            id='url-order-info',
-            style={
-                'padding': '10px',
+                html.Label('Position Controls:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
+                
+                # X slider
+                html.Div([
+                    html.Div(id='x-position-display', children='X: --', 
+                            style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-x',
+                        min=0,
+                        max=TRUCK_LENGTH,
+                        step=0.1,
+                        value=0,
+                        marks={0: '0m', TRUCK_LENGTH: f'{TRUCK_LENGTH}m'},
+                        tooltip={"placement": "bottom", "always_visible": False},
+                        disabled=True  # Disabled by default
+                    )
+                ], style={'marginBottom': '15px'}),
+                
+                # Y slider
+                html.Div([
+                    html.Div(id='y-position-display', children='Y: --',
+                            style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-y',
+                        min=0,
+                        max=TRUCK_WIDTH,
+                        step=0.1,
+                        value=0,
+                        marks={0: '0m', TRUCK_WIDTH: f'{TRUCK_WIDTH}m'},
+                        tooltip={"placement": "bottom", "always_visible": False},
+                        disabled=True
+                    )
+                ], style={'marginBottom': '15px'}),
+                
+                # Z slider
+                html.Div([
+                    html.Div(id='z-position-display', children='Z: --',
+                            style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '5px'}),
+                    dcc.Slider(
+                        id='slider-z',
+                        min=0,
+                        max=TRUCK_HEIGHT,
+                        step=0.1,
+                        value=0,
+                        marks={0: '0m', TRUCK_HEIGHT: f'{TRUCK_HEIGHT}m'},
+                        tooltip={"placement": "bottom", "always_visible": False},
+                        disabled=True
+                    )
+                ], style={'marginBottom': '15px'}),
+            ], style={
+                'padding': '15px',
                 'backgroundColor': '#334155',
                 'borderRadius': '5px',
-                'marginBottom': '20px',
-                'fontSize': '14px',
-                'fontWeight': 'bold'
-            }
-        ),
-
-        html.Button(
-            '➕ Add Package',
-            id='add-package-btn',
-            n_clicks=0,
-            style={
-                'width': '100%',
-                'padding': '10px',
-                'backgroundColor': '#3b82f6',
-                'color': 'white',
-                'border': 'none',
-                'borderRadius': '5px',
-                'cursor': 'pointer',
-                'fontSize': '16px',
-                'marginBottom': '20px'
-            }
-        ),
-
-        html.Div([
-            html.H3('Summary', style={'marginBottom': '10px'}),
-            html.Div(id='summary-stats')
-        ], style={'marginBottom': '20px'}),
-        
-        html.Div([
-            html.H3('Packages', style={'marginBottom': '10px'}),
-            html.Div(id='package-list', style={'maxHeight': '250px', 'overflowY': 'auto'})
-        ], style={'marginBottom': '20px'}),
-
-        create_floor_grid(),
-        
-        html.Div([
-            html.H3('Edit Selected Package', style={'marginBottom': '10px'}),
-            html.Div(id='package-controls')
+                'marginBottom': '15px'
+            }),
+            
+            # Quick align buttons
+            html.Div([
+                html.Label('Quick Align:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
+                html.Div([
+                    html.Button('⬅️ Left', id='align-left-btn', n_clicks=0,
+                               style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                    html.Button('➡️ Right', id='align-right-btn', n_clicks=0,
+                               style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                ], style={'display': 'flex', 'marginBottom': '5px'}),
+                html.Div([
+                    html.Button('⬇️ Front', id='align-front-btn', n_clicks=0,
+                               style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                    html.Button('⬆️ Back', id='align-back-btn', n_clicks=0,
+                               style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
+                ], style={'display': 'flex', 'marginBottom': '5px'}),
+                html.Button('⬇️ Floor', id='align-floor-btn', n_clicks=0,
+                           style={'width': '100%', 'padding': '5px', 'fontSize': '11px'})
+            ], style={'marginBottom': '15px'}),
+            
         ], id='controls-container')
         
-    ], style={
+    ], id='control-panel', style={
         'width': '350px',
         'padding': '20px',
         'backgroundColor': '#1e293b',

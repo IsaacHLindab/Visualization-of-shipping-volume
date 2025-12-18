@@ -109,136 +109,6 @@ def register_callbacks(app):
         
         return package_items
 
-    @app.callback(
-    Output('package-controls', 'children'),
-    [Input('selected-package-id', 'data'),
-     Input('packages-store', 'data')]
-    )
-    def update_controls(selected_id, packages):
-        """Update the control interface for the selected package"""
-        if not packages:
-            return html.Div('No packages loaded', style={'color': '#94a3b8', 'textAlign': 'center'})
-        
-        selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
-        
-        if not selected_pkg:
-            return html.Div('Select a package to edit', style={'color': '#94a3b8', 'textAlign': 'center'})
-        
-        from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
-        
-        return html.Div([
-            html.H4(f'Editing: {selected_pkg["name"]}', 
-                    style={'color': '#3b82f6', 'marginBottom': '15px'}),
-            
-            # Rotation control
-            html.Div([
-                html.Label('Rotation:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
-                html.Button('🔄 Rotate 90°', id='rotate-btn', n_clicks=0,
-                        style={'width': '100%', 'padding': '8px', 'marginBottom': '15px'})
-            ]),
-            
-            # Position controls with SLIDERS
-            html.Div([
-                html.Label('Position:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
-                
-                # X Position
-                html.Div([
-                    html.Div([
-                        html.Span('X (Length): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
-                        html.Span(f'{selected_pkg["x"]:.2f}m', 
-                                id='x-display',
-                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
-                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
-                    dcc.Slider(
-                        id='slider-x',
-                        min=0,
-                        max=TRUCK_LENGTH - selected_pkg['width'],
-                        step=0.1,
-                        value=selected_pkg['x'],
-                        marks={0: '0m', TRUCK_LENGTH: f'{TRUCK_LENGTH}m'},
-                        tooltip={"placement": "bottom", "always_visible": False}
-                    )
-                ], style={'marginBottom': '15px'}),
-                
-                # Y Position
-                html.Div([
-                    html.Div([
-                        html.Span('Y (Width): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
-                        html.Span(f'{selected_pkg["y"]:.2f}m', 
-                                id='y-display',
-                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
-                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
-                    dcc.Slider(
-                        id='slider-y',
-                        min=0,
-                        max=TRUCK_WIDTH - selected_pkg['depth'],
-                        step=0.1,
-                        value=selected_pkg['y'],
-                        marks={0: '0m', TRUCK_WIDTH: f'{TRUCK_WIDTH}m'},
-                        tooltip={"placement": "bottom", "always_visible": False}
-                    )
-                ], style={'marginBottom': '15px'}),
-                
-                # Z Position
-                html.Div([
-                    html.Div([
-                        html.Span('Z (Height): ', style={'color': '#94a3b8', 'fontSize': '12px'}),
-                        html.Span(f'{selected_pkg["z"]:.2f}m', 
-                                id='z-display',
-                                style={'color': '#3b82f6', 'fontWeight': 'bold', 'fontSize': '14px'})
-                    ], style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': '5px'}),
-                    dcc.Slider(
-                        id='slider-z',
-                        min=0,
-                        max=TRUCK_HEIGHT - selected_pkg['height'],
-                        step=0.1,
-                        value=selected_pkg['z'],
-                        marks={0: '0m', TRUCK_HEIGHT: f'{TRUCK_HEIGHT}m'},
-                        tooltip={"placement": "bottom", "always_visible": False}
-                    )
-                ], style={'marginBottom': '15px'}),
-                
-            ], style={
-                'padding': '15px',
-                'backgroundColor': '#334155',
-                'borderRadius': '5px',
-                'marginBottom': '15px'
-            }),
-            
-            # Quick alignment buttons
-            html.Div([
-                html.Label('Quick Align:', style={'fontWeight': 'bold', 'marginBottom': '5px'}),
-                html.Div([
-                    html.Button('⬅️ Left', id='align-left-btn', n_clicks=0,
-                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
-                    html.Button('➡️ Right', id='align-right-btn', n_clicks=0,
-                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
-                ], style={'display': 'flex', 'marginBottom': '5px'}),
-                html.Div([
-                    html.Button('⬇️ Front', id='align-front-btn', n_clicks=0,
-                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
-                    html.Button('⬆️ Back', id='align-back-btn', n_clicks=0,
-                            style={'flex': '1', 'padding': '5px', 'fontSize': '11px', 'margin': '2px'}),
-                ], style={'display': 'flex', 'marginBottom': '5px'}),
-                html.Button('⬇️ Floor', id='align-floor-btn', n_clicks=0,
-                        style={'width': '100%', 'padding': '5px', 'fontSize': '11px'})
-            ], style={'marginBottom': '15px'}),
-            
-            # Delete button
-            html.Button('🗑️ Delete Package', 
-                    id='delete-package-btn',
-                    n_clicks=0,
-                    style={
-                        'width': '100%',
-                        'padding': '10px',
-                        'backgroundColor': '#dc2626',
-                        'color': 'white',
-                        'border': 'none',
-                        'borderRadius': '5px',
-                        'cursor': 'pointer',
-                        'fontWeight': 'bold'
-                    })
-        ])
 
     @app.callback(
         Output('truck-3d-graph', 'figure'),
@@ -260,24 +130,79 @@ def register_callbacks(app):
         return current_camera
     
     @app.callback(
-    Output('camera-display', 'children'),
-    [Input('truck-3d-graph', 'relayoutData')]
+    [Output('selected-package-name', 'children'),
+     Output('slider-x', 'disabled'),
+     Output('slider-y', 'disabled'),
+     Output('slider-z', 'disabled'),
+     Output('slider-x', 'max'),
+     Output('slider-y', 'max'),
+     Output('slider-z', 'max')],
+    [Input('selected-package-id', 'data'),
+     Input('packages-store', 'data')]
     )
-    def display_camera_position(relayout_data):
-        """Display current camera position for easy config copying"""
-        if relayout_data and 'scene.camera' in relayout_data:
-            camera = relayout_data['scene.camera']
-            eye = camera.get('eye', {})
-            center = camera.get('center', {})
-            up = camera.get('up', {})
-            
-            return html.Pre(f"""DEFAULT_CAMERA = {{
-        'eye': {{'x': {eye.get('x', 0):.2f}, 'y': {eye.get('y', 0):.2f}, 'z': {eye.get('z', 0):.2f}}},
-        'center': {{'x': {center.get('x', 0):.2f}, 'y': {center.get('y', 0):.2f}, 'z': {center.get('z', 0):.2f}}},
-        'up': {{'x': {up.get('x', 0):.2f}, 'y': {up.get('y', 0):.2f}, 'z': {up.get('z', 0):.2f}}}
-    }}""", style={'margin': '0', 'whiteSpace': 'pre-wrap'})
+    def update_slider_state(selected_id, packages):
+        """Enable/disable sliders and set max values based on selected package"""
+        if not packages or not selected_id:
+            return (
+                'Select a package to edit',
+                True, True, True,  # All disabled
+                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+            )
         
-        return "Rotate the 3D view to see camera values..."
+        selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not selected_pkg:
+            return (
+                'Select a package to edit',
+                True, True, True,
+                TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT
+            )
+        
+        # Calculate max values based on package dimensions
+        rotation = selected_pkg.get('rotation', 0)
+        actual_width, actual_height = rotate_dimensions(
+            selected_pkg['width'], selected_pkg['height'], rotation
+        )
+        
+        max_x = TRUCK_LENGTH - actual_width
+        max_y = TRUCK_WIDTH - actual_height
+        max_z = TRUCK_HEIGHT - selected_pkg['depth']
+        
+        return (
+            f"Editing: {selected_pkg['name']}",
+            False, False, False,  # All enabled
+            max_x, max_y, max_z
+        )
+
+
+    @app.callback(
+        [Output('slider-x', 'value'),
+        Output('slider-y', 'value'),
+        Output('slider-z', 'value'),
+        Output('x-position-display', 'children'),
+        Output('y-position-display', 'children'),
+        Output('z-position-display', 'children')],
+        [Input('selected-package-id', 'data'),
+        Input('packages-store', 'data')]
+    )
+    def update_slider_values(selected_id, packages):
+        """Update slider values to match selected package position"""
+        if not packages or not selected_id:
+            return 0, 0, 0, 'X: --', 'Y: --', 'Z: --'
+        
+        selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
+        if not selected_pkg:
+            return 0, 0, 0, 'X: --', 'Y: --', 'Z: --'
+        
+        x = selected_pkg['x']
+        y = selected_pkg['y']
+        z = selected_pkg['z']
+        
+        return (
+            x, y, z,
+            f'X (Length): {x:.2f}m',
+            f'Y (Width): {y:.2f}m',
+            f'Z (Height): {z:.2f}m'
+    )
 
 
 def _create_quick_actions():
