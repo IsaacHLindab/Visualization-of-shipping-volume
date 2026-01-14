@@ -7,47 +7,55 @@ import numpy as np
 def parse_powerbi_packages(package_string):
     """
     Parse package data from Power BI URL parameter
-    Format: Name~X~Y~Z~Weight~Stackable|Name~X~Y~Z~Weight~Stackable|...
+    Format: Name~Width~Length~Height~Weight~Stackable|Name~...
     """
     if not package_string:
         return []
     
     packages = []
-    colors = [
-        'rgb(59, 130, 246)',   # Blue
-        'rgb(234, 88, 12)',    # Orange
-        'rgb(34, 197, 94)',    # Green
-        'rgb(168, 85, 247)',   # Purple
-        'rgb(236, 72, 153)'    # Pink
-    ]
+    package_type_colors = {
+        'EMBV1': 'rgb(59, 130, 246)',   # Blue
+        'EMBV2': 'rgb(234, 88, 12)',    # Orange
+    }
     
-    # Split by pipe to get individual packages
+    default_color = 'rgb(156, 163, 175)'
+
     package_parts = package_string.split('|')
     
     for i, pkg_str in enumerate(package_parts):
+        # Skip empty strings (from double separators)
+        if not pkg_str or not pkg_str.strip():
+            continue
+            
         try:
-            # Split by tilde to get package attributes
             parts = pkg_str.split('~')
             
             if len(parts) != 6:
-                print(f"⚠️ Invalid package format: {pkg_str}")
+                print(f"⚠️ Invalid package format (expected 6, got {len(parts)}): {pkg_str}")
                 continue
             
-            name, x, y, z, weight, stackable = parts
-            
+            name, width, length, height, weight, stackable = parts
+            package_type = name.split()[0] if name else "Unknown"
+            color = package_type_colors.get(package_type, default_color)
+            # Convert comma to dot for European decimal format
+            width = width.replace(',', '.')
+            length = length.replace(',', '.')
+            height = height.replace(',', '.')
+            weight = weight.replace(',', '.')
+
             package = {
-                'id': i + 1,
-                'name': name,
-                'x': 0.0,  # Start at origin, user can move
+                'id': len(packages) + 1,
+                'name': name.strip(),
+                'x': 0.0,
                 'y': 0.0,
                 'z': 0.0,
-                'width': float(x),
-                'height': float(z),
-                'depth': float(y),
+                'width': float(width),  # Width -> width (X)
+                'depth': float(length),  # Length -> depth (Y)
+                'height': float(height),  # Height -> height (Z)
                 'weight': float(weight),
                 'rotation': 0,
-                'color': colors[i % len(colors)],
-                'stackable': stackable == '1' or stackable.lower() == 'true'
+                'color': color,
+                'stackable': stackable.strip() in ['1', 'True', 'true', 'TRUE']
             }
             
             packages.append(package)
@@ -56,6 +64,7 @@ def parse_powerbi_packages(package_string):
             print(f"❌ Error parsing package: {pkg_str} - {e}")
             continue
     
+    print(f"✅ Loaded {len(packages)} packages from Power BI")
     return packages
 
 def register_callbacks(app):
