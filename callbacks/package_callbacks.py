@@ -124,7 +124,6 @@ def register_callbacks(app):
             'height': 1.2,
             'depth': 0.86,
             'color': f'rgb({np.random.randint(100, 255)}, {np.random.randint(100, 255)}, {np.random.randint(100, 255)})',
-            'weight': 300,
             'rotation': 0
         }
         
@@ -383,15 +382,14 @@ def register_callbacks(app):
         [Input('input-width', 'value'),
         Input('input-depth', 'value'),
         Input('input-height', 'value'),
-        Input('input-weight', 'value'),
         Input('input-stackable', 'value')],
         [State('selected-package-id', 'data'),
         State('packages-store', 'data'),
         State('truck-dimensions', 'data')],  # ADD THIS
         prevent_initial_call=True
     )
-    def update_package_properties(width, depth, height, weight, stackable, selected_id, packages, truck_dims):
-        """Update package dimensions, weight, and stackable property"""
+    def update_package_properties(width, depth, height, stackable, selected_id, packages, truck_dims):
+        """Update package dimensions, and stackable property"""
         if not packages or not selected_id:
             raise PreventUpdate
         
@@ -430,9 +428,6 @@ def register_callbacks(app):
         elif trigger_id == 'input-height' and height is not None:
             if abs(current_pkg['height'] - height) > 0.001:
                 value_changed = True
-        elif trigger_id == 'input-weight' and weight is not None:
-            if abs(current_pkg['weight'] - weight) > 0.1:
-                value_changed = True
         
         if not value_changed:
             raise PreventUpdate
@@ -443,8 +438,6 @@ def register_callbacks(app):
         if depth is not None and depth < 0.5:
             raise PreventUpdate
         if height is not None and height < 0.5:
-            raise PreventUpdate
-        if weight is not None and weight < 50:
             raise PreventUpdate
         
         # Get truck dimensions (use custom or defaults)
@@ -466,9 +459,6 @@ def register_callbacks(app):
                 elif trigger_id == 'input-height' and height is not None:
                     updated_pkg['height'] = round(height, 2)
                     print(f"📏 Updated height: {height:.2f}m")
-                elif trigger_id == 'input-weight' and weight is not None:
-                    updated_pkg['weight'] = round(weight, 1)
-                    print(f"⚖️ Updated weight: {weight:.1f}kg")
                 
                 # Ensure package doesn't go out of bounds after dimension change
                 rotation = updated_pkg.get('rotation', 0)

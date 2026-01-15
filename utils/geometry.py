@@ -19,14 +19,13 @@ def rotate_dimensions(width, height, rotation):
 
 def calculate_totals(packages):
     """
-    Calculate total weight and volume of all packages
+    Calculate total volume of all packages
     
     Args:
         packages: List of package dictionaries
     
     Returns:
-        tuple: (total_weight, total_volume)
+        tuple: (total_volume)
     """
-    total_weight = sum(pkg['weight'] for pkg in packages)
     total_volume = sum(pkg['width'] * pkg['height'] * pkg['depth'] for pkg in packages)
-    return total_weight, total_volume
+    return total_volume

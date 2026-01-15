@@ -6,7 +6,7 @@ from config import TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT, DEFAULT_CAMERA
 from utils.geometry import rotate_dimensions, calculate_totals
 
 
-def create_box_mesh(x, y, z, width, height, depth, color, name, weight, rotation):
+def create_box_mesh(x, y, z, width, height, depth, color, name, rotation):
     """Create a 3D box mesh for a package"""
     # Adjust dimensions based on rotation
     actual_width, actual_height = rotate_dimensions(width, height, rotation)
@@ -39,7 +39,6 @@ def create_box_mesh(x, y, z, width, height, depth, color, name, weight, rotation
         hovertemplate=f'<b>{name}</b><br>' +
                       f'Position: ({x:.1f}, {y:.1f}, {z:.1f})<br>' +
                       f'Size: {actual_width:.1f} × {actual_height:.1f} × {depth:.1f}m<br>' +
-                      f'Weight: {weight} kg<br>' +
                       f'Rotation: {rotation}°<br>' +
                       '<extra></extra>',
         showlegend=True
@@ -128,10 +127,10 @@ def create_figure(packages, camera=None):
         fig.add_trace(create_box_mesh(
             pkg['x'], pkg['y'], pkg['z'],
             pkg['width'], pkg['height'], pkg['depth'],
-            pkg['color'], pkg['name'], pkg['weight'], pkg.get('rotation', 0)
+            pkg['color'], pkg['name'], pkg.get('rotation', 0)
         ))
     
-    total_weight, total_volume = calculate_totals(packages)
+    total_volume = calculate_totals(packages)
     truck_volume = TRUCK_LENGTH * TRUCK_WIDTH * TRUCK_HEIGHT
     load_rate = (total_volume / truck_volume) * 100
 
@@ -190,10 +189,10 @@ def create_figure_custom(packages, camera=None, truck_dims=None):
         fig.add_trace(create_box_mesh(
             pkg['x'], pkg['y'], pkg['z'],
             pkg['width'], pkg['height'], pkg['depth'],
-            pkg['color'], pkg['name'], pkg['weight'], pkg.get('rotation', 0)
+            pkg['color'], pkg['name'], pkg.get('rotation', 0)
         ))
     
-    total_weight, total_volume = calculate_totals(packages)
+    total_volume = calculate_totals(packages)
     truck_volume = truck_length * truck_width * truck_height
     load_rate = (total_volume / truck_volume) * 100
 

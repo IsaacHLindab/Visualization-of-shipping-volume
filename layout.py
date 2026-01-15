@@ -129,7 +129,7 @@ def create_control_panel():
                 'marginBottom': '15px'
             }),
 
-            # Dimension and weight controls
+            # Dimension controls
             html.Div([
                 html.Label('Package Properties:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
                 
@@ -171,20 +171,6 @@ def create_control_panel():
                         max=TRUCK_HEIGHT,
                         step=0.01,
                         placeholder='Height',
-                        disabled=True,
-                        style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
-                    )
-                ]),
-                
-                html.Div([
-                    html.Label('Weight (kg):', style={'fontSize': '12px', 'color': '#94a3b8', 'marginBottom': '3px'}),
-                    dcc.Input(
-                        id='input-weight',
-                        type='number',
-                        min=1,
-                        max=10000,
-                        step=1,
-                        placeholder='Weight',
                         disabled=True,
                         style={'width': '100%', 'padding': '5px', 'marginBottom': '10px'}
                     )

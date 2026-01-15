@@ -13,7 +13,6 @@ INITIAL_PACKAGES = [
         'x': 0.0, 'y': 0.0, 'z': 0.0,
         'width': 3.0, 'height': 0.86, 'depth': 1.2,
         'color': 'rgb(59, 130, 246)',
-        'weight': 300.0,
         'rotation': 0  # 0, 90, 180, 270 degrees
     }
 ]

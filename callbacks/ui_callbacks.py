@@ -20,13 +20,12 @@ def register_callbacks(app):
         if not packages:
             return html.Div('No packages loaded', style={'color': '#94a3b8'})
         
-        total_weight, total_volume = calculate_totals(packages)
+        total_volume = calculate_totals(packages)
         truck_volume = TRUCK_LENGTH * TRUCK_WIDTH * TRUCK_HEIGHT
         utilization = (total_volume / truck_volume) * 100
         
         return html.Div([
             html.Div(f'📦 Total Packages: {len(packages)}', style={'marginBottom': '5px'}),
-            html.Div(f'⚖️ Total Weight: {total_weight:.1f} kg', style={'marginBottom': '5px'}),
             html.Div(f'📐 Total Volume: {total_volume:.2f} m³', style={'marginBottom': '5px'}),
             html.Div(f'📊 Utilization: {utilization:.1f}%', style={'marginBottom': '5px'})
         ])
@@ -91,10 +90,6 @@ def register_callbacks(app):
                         html.Span(
                             f"Rot: {rotation}° | ",
                             style={'fontSize': '12px', 'color': '#cbd5e1'}
-                        ),
-                        html.Span(
-                            f"{pkg['weight']:.0f}kg",
-                            style={'fontSize': '12px', 'color': '#cbd5e1'}
                         )
                     ], style={'marginTop': '3px'})
                 ], id={'type': 'package-item', 'index': pkg['id']},
@@ -147,7 +142,6 @@ def register_callbacks(app):
      Output('input-width', 'disabled'),
      Output('input-depth', 'disabled'),
      Output('input-height', 'disabled'),
-     Output('input-weight', 'disabled'),
      Output('stackable-container', 'style')],
     [Input('selected-package-id', 'data'),
      Input('packages-store', 'data')]
@@ -159,7 +153,7 @@ def register_callbacks(app):
                 'Select a package to edit',
                 True, True, True,  # Sliders disabled
                 TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT,
-                True, True, True, True, # Inputs disabled
+                True, True, True, # Inputs disabled
                 {'display': 'none'} # stackable check box hidden
             )
         
@@ -169,7 +163,7 @@ def register_callbacks(app):
                 'Select a package to edit',
                 True, True, True,
                 TRUCK_LENGTH, TRUCK_WIDTH, TRUCK_HEIGHT,
-                True, True, True, True, 
+                True, True, True,
                 {'display': 'none'}
             )
         
@@ -187,7 +181,7 @@ def register_callbacks(app):
             f"Editing: {selected_pkg['name']}",
             False, False, False,  # Sliders enabled
             max_x, max_y, max_z,
-            False, False, False, False,  # Inputs enabled
+            False, False, False,  # Inputs enabled
             {'display': 'block', 'fontSize': '12px', 'marginBottom': '10px'}  # Visible stackable checkbox
         )
 
@@ -225,25 +219,23 @@ def register_callbacks(app):
     @app.callback(
         [Output('input-width', 'value'),
         Output('input-depth', 'value'),
-        Output('input-height', 'value'),
-        Output('input-weight', 'value')],
+        Output('input-height', 'value')],
         [Input('selected-package-id', 'data'),
         Input('packages-store', 'data')]
     )
     def update_property_inputs(selected_id, packages):
         """Update property input values to match selected package"""
         if not packages or not selected_id:
-            return None, None, None, None
+            return None, None, None
         
         selected_pkg = next((pkg for pkg in packages if pkg['id'] == selected_id), None)
         if not selected_pkg:
-            return None, None, None, None
+            return None, None, None
         
         return (
             selected_pkg['width'],
             selected_pkg['depth'],
-            selected_pkg['height'],
-            selected_pkg['weight']
+            selected_pkg['height']
         )
     
     @app.callback(

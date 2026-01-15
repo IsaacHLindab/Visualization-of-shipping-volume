@@ -7,7 +7,7 @@ import numpy as np
 def parse_powerbi_packages(package_string):
     """
     Parse package data from Power BI URL parameter
-    Format: Name~Width~Length~Height~Weight~Stackable|Name~...
+    Format: Name~Width~Length~Height~Stackable|Name~...
     """
     if not package_string:
         return []
@@ -30,18 +30,17 @@ def parse_powerbi_packages(package_string):
         try:
             parts = pkg_str.split('~')
             
-            if len(parts) != 6:
-                print(f"⚠️ Invalid package format (expected 6, got {len(parts)}): {pkg_str}")
+            if len(parts) != 5:
+                print(f"⚠️ Invalid package format (expected 5, got {len(parts)}): {pkg_str}")
                 continue
             
-            name, width, length, height, weight, stackable = parts
+            name, width, length, height, stackable = parts
             package_type = name.split()[0] if name else "Unknown"
             color = package_type_colors.get(package_type, default_color)
             # Convert comma to dot for European decimal format
             width = width.replace(',', '.')
             length = length.replace(',', '.')
             height = height.replace(',', '.')
-            weight = weight.replace(',', '.')
 
             package = {
                 'id': len(packages) + 1,
@@ -52,7 +51,6 @@ def parse_powerbi_packages(package_string):
                 'width': float(width),  # Width -> width (X)
                 'depth': float(length),  # Length -> depth (Y)
                 'height': float(height),  # Height -> height (Z)
-                'weight': float(weight),
                 'rotation': 0,
                 'color': color,
                 'stackable': stackable.strip() in ['1', 'True', 'true', 'TRUE']
@@ -128,7 +126,7 @@ def register_callbacks(app):
             if packages:
                 print(f"✅ Parsed {len(packages)} packages from Power BI:")
                 for pkg in packages:
-                    print(f"   📦 {pkg['name']}: {pkg['width']}x{pkg['depth']}x{pkg['height']}m, {pkg['weight']}kg")
+                    print(f"   📦 {pkg['name']}: {pkg['width']}x{pkg['depth']}x{pkg['height']}m")
                 print()
                 return packages, len(packages)
         
@@ -173,7 +171,6 @@ def create_demo_packages_for_order(order_number):
             'height': np.random.uniform(0.8, 1.2),
             'depth': np.random.uniform(0.8, 1.2),
             'color': colors[i % len(colors)],
-            'weight': np.random.uniform(200, 400),
             'rotation': 0
         })
     
