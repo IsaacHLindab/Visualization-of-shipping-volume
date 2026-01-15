@@ -30,11 +30,8 @@ def create_layout():
 def create_control_panel():
     """Create the left control panel"""
     return html.Div([
-        html.H2('🚛 Truck Loading Control', style={'marginBottom': '20px'}),
-        
         # Summary stats
         html.Div([
-            html.H3('Summary', style={'fontSize': '16px', 'marginBottom': '10px'}),
             html.Div(id='url-order-info', style={'marginBottom': '10px', 'color': '#cbd5e1'}),
             html.Div(id='summary-stats')
         ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
@@ -42,8 +39,6 @@ def create_control_panel():
         # Package list
         html.Div([
             html.H3('Packages', style={'fontSize': '16px', 'marginBottom': '10px'}),
-            html.Button('➕ Add Package', id='add-package-btn', n_clicks=0,
-                       style={'width': '100%', 'padding': '8px', 'marginBottom': '10px', 'cursor': 'pointer'}),
             html.Div(id='package-list', style={'maxHeight': '300px', 'overflowY': 'auto'})
         ], style={'marginBottom': '20px', 'paddingBottom': '20px', 'borderBottom': '1px solid #475569'}),
         
@@ -54,9 +49,7 @@ def create_control_panel():
                     children='Select a package to edit',
                     style={'color': '#94a3b8', 'marginBottom': '15px', 'fontStyle': 'italic'}),
             
-            # Rotation
-            html.Button('🔄 Rotate 90°', id='rotate-btn', n_clicks=0,
-                       style={'width': '100%', 'padding': '8px', 'marginBottom': '15px'}),
+
             
             # Grid
             create_floor_grid(),
@@ -65,7 +58,7 @@ def create_control_panel():
             html.Div([
                 html.Label('Position Controls:', style={'fontWeight': 'bold', 'marginBottom': '10px'}),
                 
-                # Auto-stack togle
+                # Auto-stack toggle
                 html.Div([
                     dcc.Checklist(
                         id='auto-stack-toggle',
@@ -122,12 +115,18 @@ def create_control_panel():
                         disabled=True
                     )
                 ], style={'marginBottom': '15px'}),
+
+                # Rotation
+                html.Button('🔄 Rotate 90°', id='rotate-btn', n_clicks=0,
+                        style={'width': '100%', 'padding': '8px', 'marginBottom': '15px'}),
             ], style={
                 'padding': '15px',
                 'backgroundColor': '#334155',
                 'borderRadius': '5px',
                 'marginBottom': '15px'
             }),
+
+
 
             # Dimension controls
             html.Div([

@@ -97,38 +97,6 @@ def update_package_with_stacking(pkg, packages, auto_stack, truck_height, action
 
 def register_callbacks(app):
     """Register package manipulation callbacks"""
-    
-    @app.callback(
-        [Output('packages-store', 'data'),
-         Output('package-counter', 'data')],
-        [Input('add-package-btn', 'n_clicks')],
-        [State('packages-store', 'data'),
-         State('package-counter', 'data')]
-    )
-    def add_package(n_clicks, packages, counter):
-        """Add a new package with random dimensions and position"""
-        if n_clicks == 0:
-            return packages, counter
-        
-        ctx = callback_context
-        if not ctx.triggered:
-            return packages, counter
-        
-        new_package = {
-            'id': counter + 1,
-            'name': f'SROR {counter + 1}',
-            'x': 0,
-            'y': 0,
-            'z': 0.0,
-            'width': 3,
-            'height': 1.2,
-            'depth': 0.86,
-            'color': f'rgb({np.random.randint(100, 255)}, {np.random.randint(100, 255)}, {np.random.randint(100, 255)})',
-            'rotation': 0
-        }
-        
-        packages.append(new_package)
-        return packages, counter + 1
 
     @app.callback(
         Output('packages-store', 'data', allow_duplicate=True),

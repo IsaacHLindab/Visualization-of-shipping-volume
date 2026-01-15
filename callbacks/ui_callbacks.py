@@ -78,20 +78,10 @@ def register_callbacks(app):
                             }
                         ),
                         html.Span(
-                            f"Size: {actual_width:.1f} × {actual_height:.1f} × {pkg['depth']:.1f}m",
+                            f"{actual_width} × {actual_height} × {pkg['depth']}m - Rot: {rotation}°",
                             style={'fontSize': '12px', 'color': '#cbd5e1'}
                         )
-                    ], style={'marginTop': '5px'}),
-                    html.Div([
-                        html.Span(
-                            f"Pos: ({pkg['x']:.2f}, {pkg['y']:.2f}, {pkg['z']:.2f}) | ",
-                            style={'fontSize': '12px', 'color': '#cbd5e1'}
-                        ),
-                        html.Span(
-                            f"Rot: {rotation}° | ",
-                            style={'fontSize': '12px', 'color': '#cbd5e1'}
-                        )
-                    ], style={'marginTop': '3px'})
+                    ], style={'marginTop': '5px'})
                 ], id={'type': 'package-item', 'index': pkg['id']},
                 n_clicks=0,
                 style={

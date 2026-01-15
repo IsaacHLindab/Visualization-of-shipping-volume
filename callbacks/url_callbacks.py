@@ -80,8 +80,7 @@ def register_callbacks(app):
         
         if order_number:
             return html.Div([
-                html.Span('📋 Order: ', style={'color': '#cbd5e1'}),
-                html.Span(order_number, style={'color': '#3b82f6', 'fontWeight': 'bold'}),
+                html.Span(f'{order_number}', style={'color': '#3b82f6', 'fontWeight': 'bold'}),
                 html.Span(
                     f'', 
                     style={'color': '#94a3b8', 'fontSize': '12px', 'marginLeft': '5px'}
@@ -89,7 +88,6 @@ def register_callbacks(app):
             ])
         
         return html.Div([
-            html.Span('📋 ', style={'marginRight': '5px'}),
             html.Span('No order selected', style={'color': '#94a3b8'})
         ])
     
